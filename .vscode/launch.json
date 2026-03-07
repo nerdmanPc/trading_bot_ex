@@ -8,7 +8,8 @@
             "type": "mix_task",
             "name": "mix (Default task)",
             "request": "launch",
-            "projectDir": "${workspaceRoot}"
+            "projectDir": "${workspaceRoot}",
+            "exitAfterTaskReturns": false
         },
         {
             "type": "mix_task",

@@ -31,7 +31,7 @@ defmodule TradingBotEx.MixProject do
       {:httpoison, "~> 2.2"},
       {:decimal, "~> 2.3"},
       {:websockex, "~> 0.4"},
-      {:protox, "~> 2.0"},
+      #{:protox, "~> 2.0"},
       {:dotenv, "~> 3.1"},
       {:mox, "~> 1.2", only: :test}
     ]
