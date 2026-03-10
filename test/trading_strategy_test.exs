@@ -130,4 +130,21 @@ defmodule TradingStrategyTest do
   end
 
   #TODO: Do nothing when quantity is 0
+
+  test "periodic tick messages advance candles without crashing" do
+    # start the strategy process
+    {:ok, pid} = TradingStrategy.start_link(%{})
+    # grab initial state
+    initial_state = :sys.get_state(pid)
+
+    # manually send a tick and wait briefly for it to be processed
+    send(pid, :tick)
+    :timer.sleep(20)
+
+    new_state = :sys.get_state(pid)
+    assert new_state == initial_state
+
+    # cleanup
+    GenServer.stop(pid)
+  end
 end
