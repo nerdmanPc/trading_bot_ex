@@ -1,5 +1,5 @@
-# filepath: /home/pedro/Documentos/Projetos/Elixir/trading_bot_ex/lib/kraken/market_listener.ex
-defmodule Kraken.MarketListener do
+# filepath: /home/pedro/Documentos/Projetos/Elixir/trading_bot_ex/lib/kraken/trade_stream.ex
+defmodule Kraken.TradeStream do
   require Logger
   require DateTime
   use WebSockex
@@ -86,12 +86,11 @@ defmodule Kraken.MarketListener do
   defp process_trade(trade) do
     {:ok, timestamp, _calendar} = DateTime.from_iso8601(trade["timestamp"])
     processed_trade = %{
-      timestamp: timestamp, #TODO
+      timestamp: timestamp, 
       price: trade["price"],
       quantity: trade["qty"],
       trade_id: trade["trade_id"],
     }
-    #GenServer.cast(Kraken.TradingStatus, {:update_kraken, processed_trade})
     processed_trade
   end
 
