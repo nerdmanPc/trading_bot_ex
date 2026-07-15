@@ -4,6 +4,8 @@ defmodule Kraken.TradeStream do
   require DateTime
   use WebSockex
 
+  alias Kraken.Subscription
+
   def start_link(state) do
     state = state |> Map.put(:last_pong, System.system_time(:second))
     asset_symbol = System.get_env("ASSET_SYMBOL")
@@ -65,11 +67,11 @@ defmodule Kraken.TradeStream do
         case decoded_msg do
           %{"channel" => "trade", "type" => "snapshot", "data" => trades} ->
             processed_trades = trades |> Enum.map(&process_trade(&1))
-            GenServer.cast(TradingStrategy, {:snapshot, processed_trades})
+            Subscription.broadcast(state.pair, {:kraken_trade_snapshot, processed_trades})
             {:ok, state}
           %{"channel" => "trade", "type" => "update", "data" => trades} ->
             processed_trades = trades |> Enum.map(&process_trade(&1))
-            GenServer.cast(TradingStrategy, {:update, processed_trades})
+            Subscription.broadcast(state.pair, {:kraken_trade_update, processed_trades})
             {:ok, state}
           %{"channel" => "heartbeat"} ->
             {:ok, state}
@@ -86,7 +88,7 @@ defmodule Kraken.TradeStream do
   defp process_trade(trade) do
     {:ok, timestamp, _calendar} = DateTime.from_iso8601(trade["timestamp"])
     processed_trade = %{
-      timestamp: timestamp, 
+      timestamp: timestamp,
       price: trade["price"],
       quantity: trade["qty"],
       trade_id: trade["trade_id"],

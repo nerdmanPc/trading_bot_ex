@@ -9,7 +9,7 @@ defmodule TradingBotEx do
 
   defp start_app() do
     children = [
-      { Kraken.MarketListener, %{} },
+      { Kraken.Subscription, %{} },
       { TradingStrategy, %{} }
     ]
 
