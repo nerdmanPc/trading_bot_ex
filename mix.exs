@@ -3,7 +3,7 @@ defmodule TradingBotEx.MixProject do
 
   def project do
     [
-      app: :trading_bot_ex,
+      app: :crypto_pipeline,
       version: "1.0.0",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
@@ -19,7 +19,7 @@ defmodule TradingBotEx.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {TradingBotEx, []},
+      mod: {CryptoPipeline, []},
       extra_applications: [:logger]
     ]
   end
@@ -28,10 +28,9 @@ defmodule TradingBotEx.MixProject do
   defp deps do
     [
       {:jason, "~> 1.4"},
-      {:httpoison, "~> 2.2"},
-      {:decimal, "~> 2.3"},
+      {:decimal, "~> 2.4"},
       {:websockex, "~> 0.4"},
-      #{:protox, "~> 2.0"},
+      {:mint, "~> 1.9"},
       {:dotenv, "~> 3.1"},
       {:mox, "~> 1.2", only: :test}
     ]
