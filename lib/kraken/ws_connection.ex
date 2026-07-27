@@ -2,9 +2,6 @@ defmodule Kraken.WsConnection do
   require Logger
   use WebSockex
 
-  @api_base "https://api.kraken.com"
-  @ws_token_path "/0/private/GetWebSocketsToken"
-
   def start_link(state) do
     state = state |> Map.put(:last_pong, System.system_time(:second))
     start_response = WebSockex.start_link("wss://ws.kraken.com/v2", __MODULE__, state)
@@ -26,7 +23,7 @@ defmodule Kraken.WsConnection do
     Logger.info("Kraken - Connected. Subscribing to #{channel} stream for #{inspect(symbols)}")
 
     # Send subscription immediately upon connection
-    GenServer.cast(self(), {:subscribe, channel, symbols})
+    WebSockex.cast(self(), {:subscribe, channel, symbols})
 
     {:ok, state}
   end
@@ -72,7 +69,7 @@ defmodule Kraken.WsConnection do
         "channel" => "level3",
         "symbol" => symbols,
         "snapshot" => true,
-        "token" => state.token,
+        "token" => state.api_token,
         #"depth" => depth
       }
     }
@@ -102,7 +99,7 @@ defmodule Kraken.WsConnection do
       "params" => %{
         "channel" => "level3",
         "symbol" => symbols,
-        "token" => state.token,
+        "token" => state.api_token,
         #"depth" => depth
       }
     }
@@ -149,7 +146,7 @@ defmodule Kraken.WsConnection do
   end
 
   def terminate(close_reason, state) do
-    Logger.warning("Kraken - Market listener terminated with reason:\n#{inspect(close_reason)}")
+    Logger.warning("Kraken - Data stream terminated with reason:\n#{inspect(close_reason)}")
     {:ok, state}
   end
 end

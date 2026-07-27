@@ -30,7 +30,7 @@ defmodule TradingBotEx.MixProject do
       {:jason, "~> 1.4"},
       {:decimal, "~> 2.4"},
       {:websockex, "~> 0.4"},
-      {:mint, "~> 1.9"},
+      {:req, "~> 0.6"},
       {:dotenv, "~> 3.1"},
       {:mox, "~> 1.2", only: :test}
     ]

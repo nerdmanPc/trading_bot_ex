@@ -8,7 +8,7 @@ defmodule CryptoPipeline do
     children = [
       {DataPipeline,
        %{
-         symbols: ["BTCUSD", "ETHUSD"],
+         symbols: ["BTC/USD", "ETH/USD"],
          api_key: System.get_env("KRAKEN_API_KEY"),
          api_secret: System.get_env("KRAKEN_API_SECRET")
        }}
