@@ -3,16 +3,7 @@ defmodule CryptoPipeline do
 
   @impl true
   def start(_type, _args) do
-    Dotenv.load()
-
-    children = [
-      {DataPipeline,
-       %{
-         symbols: ["BTC/USD", "ETH/USD"],
-         api_key: System.get_env("KRAKEN_API_KEY"),
-         api_secret: System.get_env("KRAKEN_API_SECRET")
-       }}
-    ]
+    children = [{DataPipeline, %{}}]
 
     Supervisor.start_link(children, strategy: :one_for_one)
   end
