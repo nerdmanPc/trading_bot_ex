@@ -4,7 +4,9 @@ defmodule Kraken.WsConnection do
 
   def start_link(state) do
     state = state |> Map.put(:last_pong, System.system_time(:second))
-    start_response = WebSockex.start_link("wss://ws.kraken.com/v2", __MODULE__, state)
+    ws_url = if state.channel == :orders, do: "wss://ws-l3.kraken.com/v2", else: "wss://ws.kraken.com/v2"
+    name = String.to_atom("kraken_ws_#{state.channel}_#{:erlang.unique_integer([:positive])}")
+    start_response = WebSockex.start_link(ws_url, __MODULE__, state)
     case start_response do
       {:ok, pid} ->
         Logger.info("Kraken - Data stream started successfully.")
@@ -57,6 +59,7 @@ defmodule Kraken.WsConnection do
       }
     }
     subscription_msg = Jason.encode!(subscription_msg)
+    #Logger.debug("Subscribe message:\n#{subscription_msg}")
 
     {:reply, {:text, subscription_msg}, state}
   end
@@ -74,6 +77,7 @@ defmodule Kraken.WsConnection do
       }
     }
     subscription_msg = Jason.encode!(subscription_msg)
+    #Logger.debug("Subscribe message:\n#{subscription_msg}")
 
     {:reply, {:text, subscription_msg}, state}
   end
@@ -113,24 +117,24 @@ defmodule Kraken.WsConnection do
       {:ok, decoded_msg} ->
         case decoded_msg do
           %{"channel" => "trade", "type" => "snapshot", "data" => trades} ->
-            Logger.debug("Kraken - Received trade snapshot:\n#{inspect(trades)}")
+            #Logger.debug("Kraken - Received trade snapshot:\n#{inspect(trades)}")
             GenServer.cast(state.destination, {:trades_snapshot, trades})
             #processed_trades = trades |> Enum.map(&process_trade(&1))
             #broadcast(state.registry, {:trades, :snapshot, state.pair}, processed_trades)
             {:ok, state}
           %{"channel" => "trade", "type" => "update", "data" => trades} ->
-            Logger.debug("Kraken - Received trade update:\n#{inspect(trades)}")
+            #Logger.debug("Kraken - Received trade update:\n#{inspect(trades)}")
             GenServer.cast(state.destination, {:trades_update, trades})
             #processed_trades = trades |> Enum.map(&process_trade(&1))
             #broadcast(state.registry, {:trades, :update, state.pair}, processed_trades)
             {:ok, state}
           %{"channel" => "level3", "type" => "snapshot", "data" => order_book} ->
-            Logger.debug("Kraken - Received order book snapshot:\n#{inspect(order_book)}")
+            #Logger.debug("Kraken - Received order book snapshot:\n#{inspect(order_book)}")
             GenServer.cast(state.destination, {:order_book_snapshot, order_book})
             #broadcast(state.registry, {:orders, :snapshot, state.pair}, order_book)
             {:ok, state}
           %{"channel" => "level3", "type" => "update", "data" => order_book} ->
-            Logger.debug("Kraken - Received order book update:\n#{inspect(order_book)}")
+            #Logger.debug("Kraken - Received order book update:\n#{inspect(order_book)}")
             GenServer.cast(state.destination, {:order_book_update, order_book})
             {:ok, state}
           %{"channel" => "heartbeat"} ->
@@ -147,6 +151,7 @@ defmodule Kraken.WsConnection do
 
   def terminate(close_reason, state) do
     Logger.warning("Kraken - Data stream terminated with reason:\n#{inspect(close_reason)}")
+    Logger.warning("Kraken - Data stream status:\n#{inspect(state)}")
     {:ok, state}
   end
 end

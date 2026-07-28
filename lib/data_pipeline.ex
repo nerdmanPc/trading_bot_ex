@@ -7,25 +7,21 @@ defmodule DataPipeline do
   end
 
   def init(init_arg) do
-    Logger.debug("Initializing Datapipeline, args: #{inspect(init_arg)}")
+    #Logger.debug("Initializing Datapipeline, args: #{inspect(init_arg)}")
     api_token = get_api_token(init_arg.api_key, init_arg.api_secret)
-    Logger.debug("Kraken - Retrieved API token: #{inspect(api_token)}")
-    {:ok, trades_pid} =
-      Kraken.WsConnection.start_link(
-        init_arg
-        |> Map.put(:channel, :trades)
-        |> Map.put(:destination, self())
-      )
+    #Logger.debug("Kraken - Retrieved API token: #{inspect(api_token)}")
+    trades_conn_args = init_arg |> Map.put(:channel, :trades) |> Map.put(:destination, self())
+    orders_conn_args = init_arg |> Map.put(:channel, :orders) |> Map.put(:api_token, api_token) |> Map.put(:destination, self())
+    # Start a supervisor for websocket connections
+    {:ok, ws_supervisor} = Supervisor.start_link(
+      [
+        Supervisor.child_spec({Kraken.WsConnection, trades_conn_args}, id: :trades_conn),
+        Supervisor.child_spec({Kraken.WsConnection, orders_conn_args}, id: :orders_conn)
+      ],
+      strategy: :one_for_one
+    )
 
-    {:ok, orders_pid} =
-      Kraken.WsConnection.start_link(
-        init_arg
-        |> Map.put(:channel, :orders)
-        |> Map.put(:api_token, api_token)
-        |> Map.put(:destination, self())
-      )
-
-    {:ok, init_arg |> Map.merge(%{trades_pid: trades_pid, orders_pid: orders_pid})}
+    {:ok, init_arg |> Map.merge(%{ws_supervisor: ws_supervisor})}
   end
 
   defp get_api_token(api_key, api_secret) do
@@ -35,7 +31,7 @@ defmodule DataPipeline do
       "nonce" => System.system_time(:millisecond)
     }
     signature = get_kraken_signature(url_path, api_secret, payload)
-    Logger.debug("Kraken - API key for token request: #{inspect(api_key)}")
+    #Logger.debug("Kraken - API key for token request: #{inspect(api_key)}")
     header = %{
       "API-Key" => api_key,
       "API-Sign" => signature,
@@ -62,25 +58,25 @@ defmodule DataPipeline do
 
   def handle_cast({:trades_snapshot, trade_data}, state) do
     # Process the trade data here
-    IO.inspect(trade_data, label: "Received trade snapshot data")
+    #IO.inspect(trade_data, label: "Received trade snapshot data")
     {:noreply, state}
   end
 
   def handle_cast({:trades_update, trade_data}, state) do
     # Process the trade data here
-    IO.inspect(trade_data, label: "Received trade update data")
+    #IO.inspect(trade_data, label: "Received trade update data")
     {:noreply, state}
   end
 
   def handle_cast({:order_book_snapshot, order_data}, state) do
     # Process the order data here
-    IO.inspect(order_data, label: "Received order snapshot data")
+    #IO.inspect(order_data, label: "Received order snapshot data")
     {:noreply, state}
   end
 
   def handle_cast({:order_book_update, order_data}, state) do
     # Process the order data here
-    IO.inspect(order_data, label: "Received order update data")
+    #IO.inspect(order_data, label: "Received order update data")
     {:noreply, state}
   end
 end
